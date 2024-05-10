@@ -1,0 +1,41 @@
+# даём имя
+# on - по какому триггеру будут запускаться тесты
+# jobs - сами тесты (то же самое, что и regression в docker-compose.yml)
+# runs-on - на чём запускаем
+# uses: actions/checkout@v2 - копируем весь репозиторий (код) на раннер виртуальной машины гита
+# run: docker-compose-up --exit-code-from regression || true - если тест упадёт, то контейнер regression всё равно
+# продолжит своё выполнение и мы получим сформированный отчёт
+# run: sudo docker-compose run regression /bin/sh -c "allure generate allure-results --clean -o allure-report" -
+# обязательно запускает от имени админа (sudo); команда для генерации allure отчётов в виде веб-страницы
+
+
+name: UI Tests
+
+on: [push]
+
+jobs:
+  ui-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Run UI-tests via docker-compose
+        env:
+          LOGIN: ${{ secrets.LOGIN }}
+          PASSWORD: ${{ secrets.PASSWORD }}
+        run: |
+          docker-compose-up --exit-code-from regression || true
+          
+
+      - name: Generate Allure report
+        run: |
+          sudo docker-compose run regression /bin/sh -c "allure generate allure-results --clean -o allure-report"
+
+      - name: Deploy to GitHub Pages # из документации github actions для allure
+        uses: JamesIves/github-pages-deploy-action@4.1.5
+        with:
+          token: ${{ secrets.CI_TOKEN }} #токен создали заранее на гите
+          branch: gh-pages #хостим на ветку, gh-pages, которую создавали ранее в репозитории
+          folder: allure-report # в ветку добавляем данные allure отчёта
+          clean: true

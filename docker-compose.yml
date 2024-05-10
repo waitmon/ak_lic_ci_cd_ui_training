@@ -1,0 +1,31 @@
+version: '3.7'
+
+# services - объявляем что будет запускаться через докер файл, в данном случае только тесты
+# тестам даём название (в нашем случае regression)
+# image - то, с чего будет собираться образ (с питона)
+# build - в случае, если image локально не находится, то собрать из текущей директории (context .)
+# из докерфайла, который находится в директории (с вложенными в него инструкциями)
+# volumes - связь контейнера с репозиторием: например, если мы хотим прокидывать отчёты из контейнера
+# наружу и снаружи в контейнер, то необходимо их "соединить". при запуске контейнера, контейнер создаст директорию
+# ./:/usr/workspace и скопирует туда всё содержимое проекта
+# command - команда, отвечающая за запуск
+# working_dir - продублировали
+# environemnts - логин/пароль из переменных окружения
+
+# если ошибка: regression-1  | /bin/sh: pytest: not found, то docker-compose up --build, после этого docker-compose up
+
+services:
+  regression:
+    image: python:3.12.0a4-alpine3.17
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./:/usr/workspace
+    command: /bin/sh -c "ls -la && pytest -sv --alluredir=allure-results"
+    working_dir: /usr/workspace
+    environment:
+      - LOGIN=${LOGIN}
+      - PASSWORD=${PASSWORD}
+
+
