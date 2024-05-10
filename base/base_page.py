@@ -22,5 +22,5 @@ class BasePage:
         allure.attach(
             body=self.driver.get_screenshot_as_png(),
             name=screenshot_name,
-            attachment_type=AttachmentType.PDF
+            attachment_type=AttachmentType.PNG
         )
